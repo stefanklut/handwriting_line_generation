@@ -202,7 +202,7 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
     gt_mask = 'create_mask' not in config['model'] #'mask' in config['model']['generator'] or 'Mask' in config['model']['generator']
 
     char_set_path = config['data_loader']['char_file']
-    if char_set_path=='../data/RIMES/characterset_lines.json':
+    if char_set_path=='./data/RIMES/characterset_lines.json':
         char_set_path='data/RIMES_characterset_lines.json'
     with open(char_set_path) as f:
         char_set = json.load(f)

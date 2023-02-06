@@ -1,4 +1,3 @@
-from datasets import hw_dataset
 import math
 import sys, os
 from matplotlib import pyplot as plt
@@ -7,6 +6,11 @@ from matplotlib.patches import Polygon
 import numpy as np
 import torch
 import cv2
+
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.joinpath("..")))
+from datasets import hw_dataset
 
 saveHere=None
 linenum=0
@@ -23,6 +27,7 @@ def display(data):
         gts.append(gt)
         #print(label[:data['label_lengths'][b],b])
         #print(gt)
+        print('{}: {}'.format(data['name'][b],gt))
 
         #cv2.imshow('line',img.numpy())
         #cv2.waitKey()
@@ -36,7 +41,8 @@ def display(data):
         #else:
         #    ax_im.imshow(img)
 
-        #plt.show()
+        plt.imshow(img, cmap='gray')
+        plt.show()
         if saveHere is not None:
             cv2.imwrite(os.path.join(saveHere,'{}.png').format(linenum),img.numpy()*255)
             linenum+=1
@@ -69,13 +75,13 @@ if __name__ == "__main__":
         #display(data[0])
     for i in range(0,start):
         print(i)
-        dataLoaderIter.next()
+        next(dataLoaderIter)
         #display(data[i])
     gts=[]
     try:
         while True:
             #print('?')
-            gts+=display(dataLoaderIter.next())
+            gts+=display(next(dataLoaderIter))
     except StopIteration:
         print('done')
 

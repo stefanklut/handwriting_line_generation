@@ -1,14 +1,14 @@
 {
-    "name": "IAMslant_noMask_charSpecSingleAppend_GANMedMT_autoAEMoPrcp2tightNewCTCUseGen_balB_hCF0.75_sMG",
+    "name": "PageXMLslant_noMask_charSpecSingleAppend_GANMedMT_autoAEMoPrcp2tightNewCTCUseGen_balB_hCF0.75_sMG",
     "cuda": true,
     "gpu": 0,
     "save_mode": "state_dict",
     "override": true,
     "super_computer":false,
     "data_loader": {
-        "data_set_name": "AuthorHWDataset",
+        "data_set_name": "AuthorPageXMLDataset",
 
-        "data_dir": "./data/IAM/",
+        "data_dir": "./data/ijsberg/",
         "batch_size": 2,
         "a_batch_size": 2,
         "shuffle": true,
@@ -19,7 +19,7 @@
         "char_file": "./data/IAM_char_set.json",
         "mask_post": ["thresh","dilateCircle","errodeCircle"],
         "mask_random": false,
-        "fg_masks_dir": "./data/IAM/fg_masks",
+        "fg_masks_dir": "./data/ijsberg/fg_masks",
         "augmentation": "affine"
     },
     "validation": {
@@ -107,7 +107,7 @@
         "encoder_weights": "saved/IAM_auto_2tight_newCTC/checkpoint-iteration60000.pth",
         "encoder_type": "2tight",
 
-        "print_dir": "train_out/IAMslant_noMask_charSpecSingleAppend_GANMedMT_autoAEMoPrcp2tightNewCTCUseGen_balB_hCF0.75_sMG",
+        "print_dir": "train_out/PageXMLslant_noMask_charSpecSingleAppend_GANMedMT_autoAEMoPrcp2tightNewCTCUseGen_balB_hCF0.75_sMG",
         "serperate_print_every": 5000,
         "print_every": 250
     },
@@ -119,7 +119,7 @@
         "gen_dim": 256,
         "gen_use_skips": true,
 	"hwr": "CNNOnly batchnorm",
-        "pretrained_hwr": "saved/IAM_hwr_cnnOnly_batchnorm_aug/checkpoint-iteration100000.pth",
+        "pretrained_hwr": "saved/PageXML_hwr_cnnOnly_batchnorm_aug/checkpoint-iteration100000.pth",
         "hwr_frozen": true,
         "count_std": 0.00000001,
         "dup_std": 0.000000001,

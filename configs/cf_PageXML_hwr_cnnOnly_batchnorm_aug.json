@@ -1,14 +1,14 @@
 {
-    "name": "IAM_hwr_cnnOnly_batchnorm_aug",
+    "name": "PageXML_hwr_cnnOnly_batchnorm_aug",
     "cuda": true,
     "gpu": 0,
     "save_mode": "state_dict",
     "override": true,
     "super_computer":false,
     "data_loader": {
-        "data_set_name": "HWDataset",
+        "data_set_name": "PageXMLDataset",
 
-        "data_dir": "./data/IAM/",
+        "data_dir": "./data/ijsberg/",
         "batch_size": 16,
         "shuffle": true,
         "num_workers": 6,

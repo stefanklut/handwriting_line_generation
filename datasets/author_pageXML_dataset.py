@@ -10,17 +10,21 @@ import os
 import cv2
 import numpy as np
 import math
+import itertools, pickle
+import random
 
+from pathlib import Path
+
+import sys
+import matplotlib.pyplot as plt
+
+sys.path.append(str(Path(__file__).resolve().parent.joinpath("..")))
 from utils import grid_distortion
 from utils.util import ensure_dir
 from utils import string_utils, augmentation, normalize_line
-from utils.parseIAM import getLineBoundaries as parseXML
+from utils.parsePageXML import getLineBoundaries as parseXML
 from utils.util import makeMask
-import itertools, pickle
 
-import matplotlib.pyplot as plt
-
-import random
 PADDING_CONSTANT = -1
 def nCr(n,r):
     f = math.factorial
@@ -113,64 +117,114 @@ def collate(batch):
         toRet['changed_image']=changed_batch
     return toRet
 
+def check_path_accessible(path: Path):
+    """
+    Check if the provide path is accessible, raise error for different checks
+    Args:
+        path (Path): path to check
+    Raises:
+        ValueError: path is not a Path object
+        FileNotFoundError: folder/file does not exist at location
+        PermissionError: no read access for folder/file
+    """
+    if not isinstance(path, Path):
+        raise ValueError(f"provided object {path} is not Path, but {type(path)}")
+    if not path.exists():
+        raise FileNotFoundError(f"Missing path: {path}")
+    if not os.access(path=path, mode=os.R_OK):
+        raise PermissionError(f"No access to {path} for read operations")
+    
+    return True
 
-class AuthorHWDataset(Dataset):
+def image_path_to_xml_path(image_path: Path, check: bool=True) -> Path:
+    """
+    Return the corresponding xml path for a image
+
+    Args:
+        image_path (Path): image path
+
+    Raises:
+        FileNotFoundError: no xml for image path
+        PermissionError: xml file is not readable
+
+    Returns:
+        Path: xml path
+    """
+    xml_path = image_path.absolute().parent.joinpath("page", image_path.stem + '.xml')
+    
+    if check:
+        check_path_accessible(xml_path)
+
+    return xml_path
+
+
+class AuthorPageXMLLinesDataset(Dataset):
     def __init__(self, dirPath, split, config):
         if 'split' in config:
             split = config['split']
-
+        
         self.img_height = config['img_height']
         self.batch_size = config['a_batch_size']
         self.no_spaces = config['no_spaces'] if 'no_spaces' in config else False
         self.max_width = config['max_width'] if  'max_width' in config else 3000
         #assert(config['batch_size']==1)
         self.warning=False
-
+        self.dirPath=dirPath
+        
         self.triplet = config['triplet'] if 'triplet' in config else False
         if self.triplet:
             self.triplet_author_size = config['triplet_author_size']
             self.triplet_sample_size = config['triplet_sample_size']
-
+            
         only_author = config['only_author'] if 'only_author' in config else None
         skip_author = config['skip_author'] if 'skip_author' in config else None
-
-        #with open(os.path.join(dirPath,'sets.json')) as f:
-        with open(os.path.join('data','sets.json')) as f:
-            set_list = json.load(f)[split]
-
-        self.authors = defaultdict(list)
-        self.lineIndex = []
-        self.max_char_len=0
-        self.author_list=set()
-        for page_idx, name in enumerate(set_list):
-            lines,author = parseXML(os.path.join(dirPath,'xmls',name+'.xml'))
-            self.author_list.add(author)
-            if only_author is not None and type(only_author) is int and page_idx==only_author:
-                only_author=author
-                print('Only author: {}'.format(only_author))
-            if only_author is not None and author!=only_author:
-                continue
-            if skip_author is not None and author==skip_author:
-                continue
-            self.max_char_len= max([self.max_char_len]+[len(l[1]) for l in lines])
-            
-            authorLines = len(self.authors[author])
-            self.authors[author] += [(os.path.join(dirPath,'forms',name+'.png'),)+l for l in lines]
-            #self.lineIndex += [(author,i+authorLines) for i in range(len(lines))]
-        self.author_list = list(self.author_list)
-        self.author_list.sort()
-        #minLines=99999
-        #for author,lines in self.authors.items():
-            #print('{} {}'.format(author,len(lines)))
-            #minLines = min(minLines,len(lines))
-        #maxCombs = int(nCr(minLines,self.batch_size)*1.2)
+        
+        if only_author is not None:
+            raise NotImplementedError('only_author not implemented for PageXML. There currently arent authors')
+        if skip_author is not None:
+            raise NotImplementedError('skip_author not implemented for PageXML. There currently arent authors')
+        
         short = config['short'] if 'short' in config else False
+        
+        assert split in ["test", "train", "valid"]
+        
+        if split == "test":
+            txt_file = Path(dirPath).joinpath("test_filelist.txt")
+        elif split == "train":
+            txt_file = Path(dirPath).joinpath("train_filelist.txt")
+        elif split == "valid":
+            txt_file = Path(dirPath).joinpath("val_filelist.txt")
+        else:
+            raise FileNotFoundError
+        
+        self.authors = {}
+        
+        with txt_file.open(mode="r") as f:
+            image_paths = [Path(line).absolute() for line in f.read().splitlines()]
+            
+        xml_paths = [image_path_to_xml_path(path) for path in image_paths]
+        
+        for path in xml_paths:
+            # print(path)
+            authors = parseXML(path)
+            self.authors.update(authors)
+            
+            
+        self.lineIndex = []            
+        self.max_char_len=0
+        
+        self.author_list = sorted(list(set(self.authors.keys())))
+        
+        
         for author,lines in self.authors.items():
-            #if split=='train':
-            #    combs=list(itertools.combinations(list(range(len(lines))),self.batch_size))
-            #    np.random.shuffle(combs)
-            #    self.lineIndex += [(author,c) for c in combs[:maxCombs]]
-            #else:
+            self.max_char_len = max(self.max_char_len,max([len(l[2]) for l in lines]))
+            # if split=='train' and self.batch_size==2:
+            #     combs=list(itertools.combinations(list(range(len(lines))),self.batch_size))
+            #     #np.random.shuffle(combs)
+            #     if short:
+            #         combs = combs[:short]
+            #     self.lineIndex += [(author,c) for c in combs]
+            # else:
             for i in range(len(lines)//self.batch_size):
                 ls=[]
                 for n in range(self.batch_size):
@@ -189,8 +243,9 @@ class AuthorHWDataset(Dataset):
             for i in range(leftover):
                 last.append(len(lines)-(1+i))
             self.lineIndex.append((author,last))
+            
         self.fg_masks_dir = config['fg_masks_dir'] if 'fg_masks_dir' in config else None
-
+        
         if self.fg_masks_dir is not None:
             if self.fg_masks_dir[-1]=='/':
                 self.fg_masks_dir = self.fg_masks_dir[:-1]
@@ -199,10 +254,22 @@ class AuthorHWDataset(Dataset):
             for author,lines in self.lineIndex:
                 for line in lines:
                     img_path, lb, gt = self.authors[author][line]
+                    img_path = os.path.join(self.dirPath, img_path)
                     fg_path = os.path.join(self.fg_masks_dir,'{}_{}.png'.format(author,line))
                     if not os.path.exists(fg_path):
-                        img = cv2.imread(img_path,0)[lb[0]:lb[1],lb[2]:lb[3]] #read as grayscale, crop line
-
+                        img = cv2.imread(img_path,0)
+                        # plt.imshow(img, cmap="gray")
+                        # plt.show()
+                        if img is None:
+                            print('Error, could not read image: {}'.format(img_path))
+                            return None
+                        lb[0] = max(lb[0],0)
+                        lb[2] = max(lb[2],0)
+                        lb[1] = min(lb[1],img.shape[0])
+                        lb[3] = min(lb[3],img.shape[1])
+                        img = img[lb[0]:lb[1],lb[2]:lb[3]] #read as grayscale, crop line
+                        # plt.imshow(img, cmap="gray")
+                        # plt.show()
                         if img.shape[0] != self.img_height:
                             if img.shape[0] < self.img_height and not self.warning:
                                 self.warning = True
@@ -221,23 +288,12 @@ class AuthorHWDataset(Dataset):
                         binarized = cv2.dilate(binarized,ele)
                         cv2.imwrite(fg_path,binarized)
                         print('saved fg mask: {}'.format(fg_path))
-                        #test_path = os.path.join(fg_masks_dir,'{}_{}_test.png'.format(author,line))
-                        ##print(img.shape)
-                        #img = np.stack((img,img,img),axis=2)
-                        #img[:,:,0]=binarized
-                        #cv2.imwrite(test_path,img)
-                        #print('saved fg mask: {}'.format(fg_path))
-
-            #if split=='train':
-            #    ss = set(self.lineIndex)
-        #self.authors = self.authors.keys()
-                
-
+                        
         char_set_path = config['char_file']
         with open(char_set_path) as f:
             char_set = json.load(f)
         self.char_to_idx = char_set['char_to_idx']
-
+        
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
         if self.normalized_dir is not None:
@@ -247,11 +303,12 @@ class AuthorHWDataset(Dataset):
 
         self.remove_bg = config['remove_bg'] if 'remove_bg' in config else False
         self.include_stroke_aug = config['include_stroke_aug'] if 'include_stroke_aug' in config else False
-
+        
+        
         #DEBUG
         if 'overfit' in config and config['overfit']:
             self.lineIndex = self.lineIndex[:10]
-
+        
         self.center = False #config['center_pad'] #if 'center_pad' in config else True
 
         if 'style_loc' in config:
@@ -293,6 +350,7 @@ class AuthorHWDataset(Dataset):
 
         self.mask_post = config['mask_post'] if 'mask_post' in config else []
         self.mask_random = config['mask_random'] if 'mask_random' in config else False
+            
 
     def __len__(self):
         return len(self.lineIndex)
@@ -362,9 +420,11 @@ class AuthorHWDataset(Dataset):
 
         images=[]
         for author,line in alines:
-            if line>=len(self.authors[author]):
-                line = (line+37)%len(self.authors[author])
+            # What is the modulo for?
+            # if line>=len(self.authors[author]):
+            #     line = (line+37)%len(self.authors[author])
             img_path, lb, gt = self.authors[author][line]
+            img_path = os.path.join(self.dirPath, img_path)
 
             if self.no_spaces:
                 gt = gt.replace(' ','')
@@ -378,6 +438,10 @@ class AuthorHWDataset(Dataset):
                 if img is None:
                     print('Error, could not read image: {}'.format(img_path))
                     return None
+                lb[0] = max(lb[0],0)
+                lb[2] = max(lb[2],0)
+                lb[1] = min(lb[1],img.shape[0])
+                lb[3] = min(lb[3],img.shape[1])
                 img = img[lb[0]:lb[1],lb[2]:lb[3]] #read as grayscale, crop line
                 
                 # plt.imshow(img, cmap="gray")
@@ -596,6 +660,7 @@ class AuthorHWDataset(Dataset):
             changed_images = torch.from_numpy(changed_images)
             toRet['changed_image']=changed_images
         return toRet
-
+        
+        
     def max_len(self):
         return self.max_char_len

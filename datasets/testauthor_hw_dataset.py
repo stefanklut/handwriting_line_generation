@@ -1,17 +1,27 @@
-from datasets import author_hw_dataset
+import os
+
 import math
 import sys
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 from matplotlib.patches import Polygon
-from utils.util import makeMask
 import numpy as np
 import torch
 import cv2
 
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent.joinpath("..")))
+
+from utils.util import makeMask
+from datasets import author_hw_dataset
+
 widths=[]
+saveHere='data/IAM_line_images_train/'
+linenum=0
 
 def display(data):
+    global saveHere,linenum
     batchSize = data['image'].size(0)
     #mask = makeMask(data['image'])
     for b in range(batchSize):
@@ -40,7 +50,9 @@ def display(data):
             #cv2.imwrite('out/changed_img{}.png'.format(b),changed_img.numpy()*255)
 
             #cv2.imwrite('out/img{}.png'.format(b),img.numpy()*255)
-            cv2.imshow('out/img{}.png'.format(b),img.numpy()*255)
+            # cv2.imshow('data/img{}.png'.format(b),img.numpy()*255)
+            plt.imshow(img.numpy(), cmap='gray')
+            plt.show()
 
             if data['top_and_bottom'] is not None:
                 center_line = data['center_line'][b]
@@ -52,6 +64,11 @@ def display(data):
                     outline[int((center_line[h]-top_and_bottom[0,h]).item()),h] = (255,0,0)
                     outline[int((center_line[h]+top_and_bottom[1,h]).item()),h] = (0,0,255)
                     outline[int(center_line[h]),h] = (0,255,0)
+                    
+            if saveHere is not None:
+                os.makedirs(saveHere, exist_ok=True)
+                cv2.imwrite(os.path.join(saveHere,'{}.png').format(linenum),img.numpy()*255)
+                linenum+=1
                 #cv2.imshow('top_and_bottom',outline)
             #cv2.waitKey()
 
@@ -90,10 +107,10 @@ if __name__ == "__main__":
         #'mask_post': ['thresh','dilateCircle','errodeCircle', 'smaller', 'errodeCircle','dilateCircle',  'dilateCircle','errodeCircle'],
         'mask_random': False,
         #'augmentation': 'normalization',
-        'Xspaced_loc': '../saved/spaced/spaced.pkl',
+        'Xspaced_loc': './saved/spaced/spaced.pkl',
         'overfit': False,
         'short':1,
-        "fg_masks_dir": "../data/IAM/fg_masks"
+        "fg_masks_dir": "./data/IAM/fg_masks"
 })
     print('num authors: {}'.format(len(data.author_list)))
     #data.cluster(start,repeat,'anchors_rot_{}.json')
@@ -105,12 +122,12 @@ if __name__ == "__main__":
         #display(data[0])
     for i in range(0,start):
         print(i)
-        dataLoaderIter.next()
+        next(dataLoaderIter)
         #display(data[i])
     try:
         while True:
             #print('?')
-            display(dataLoaderIter.next())
+            display(next(dataLoaderIter))
     except StopIteration:
         print('done')
 

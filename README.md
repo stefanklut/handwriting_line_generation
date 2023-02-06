@@ -176,7 +176,7 @@ Config files are in `.json` format.
         "data_set_name": "AuthorHWDataset",                     #class name
 
         "data_dir": "/trainman-mount/trainman-storage-8308c0a4-7f25-47ad-ae22-1de9e3faf4ad",    #IAM loaction on sensei
-        "Xdata_dir": "../data/IAM/",
+        "Xdata_dir": "./data/IAM/",
         "batch_size": 1,
         "a_batch_size": 2,
         "shuffle": true,
@@ -187,13 +187,13 @@ Config files are in `.json` format.
         "char_file": "./data/IAM_char_set.json",
         "mask_post": ["thresh","dilateCircle","errodeCircle"],
         "mask_random": false,
-        "spaced_loc": "../saved/spaced/spaced.pkl"
+        "spaced_loc": "./saved/spaced/spaced.pkl"
     },
     "validation": {
         "shuffle": false,
         "batch_size": 3,
         "a_batch_size": 2,
-        "spaced_loc": "../saved/spaced/val_spaced.pkl"
+        "spaced_loc": "./saved/spaced/val_spaced.pkl"
     },
 
     
@@ -250,7 +250,7 @@ Config files are in `.json` format.
     "trainer": {
         "class": "HWWithStyleTrainer",
         "iterations": 700000,                               #Everything is iterations, because epochs are weird.
-        "save_dir": "../saved/",
+        "save_dir": "./saved/",
         "val_step": 2000,                                   #how frequently to run through validation set
         "save_step": 5000,                                  #how frequently to save a seperate snapshot of the training & model
         "save_step_minor": 250,                             #how frequently to save a "latest" model (overwrites)
@@ -291,7 +291,7 @@ Config files are in `.json` format.
         "gen_n_res3": 2,
         "gen_use_skips": true,
 	"hwr": "CRNN_group_norm_softmax",
-        "pretrained_hwr": "../saved/IAM_hwr_softmax_aug/checkpoint-latest.pth",
+        "pretrained_hwr": "./saved/IAM_hwr_softmax_aug/checkpoint-latest.pth",
         "hwr_frozen": true,
         "style": "new",
         "style_norm":"group",

@@ -4,6 +4,8 @@ import numpy as np
 from datasets import hw_dataset
 from datasets import author_hw_dataset
 from datasets import author_rimeslines_dataset
+from datasets import author_pageXML_dataset
+from datasets import pageXML_dataset
 from base import BaseDataLoader
 
 
@@ -33,10 +35,14 @@ def getDataLoader(config,split):
 
         if data_set_name=='HWDataset':
             return withCollate(hw_dataset.HWDataset,hw_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
+        elif data_set_name=='PageXMLDataset':
+            return withCollate(pageXML_dataset.PageXMLDataset,pageXML_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         elif data_set_name=='AuthorHWDataset':
             return withCollate(author_hw_dataset.AuthorHWDataset,author_hw_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         elif data_set_name=='AuthorRIMESLinesDataset':
             return withCollate(author_rimeslines_dataset.AuthorRIMESLinesDataset,author_rimeslines_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
+        elif data_set_name=='AuthorPageXMLDataset':
+            return withCollate(author_pageXML_dataset.AuthorPageXMLLinesDataset,author_pageXML_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         else:
             print('Error, no dataloader has no set for {}'.format(data_set_name))
             exit()
@@ -59,6 +65,7 @@ def basic(setObj,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers
         validData = setObj(dirPath=data_dir, split=['train','valid'], config=config['validation'])
         validLoader = torch.utils.data.DataLoader(validData, batch_size=valid_batch_size, shuffle=shuffleValid, num_workers=numDataWorkers)
         return trainLoader, validLoader
+    
 def withCollate(setObj,collateFunc,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config):
     if split=='train':
         trainData = setObj(dirPath=data_dir, split='train', config=config['data_loader'])
