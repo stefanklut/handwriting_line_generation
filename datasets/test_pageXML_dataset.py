@@ -42,8 +42,8 @@ def display(data):
         #else:
         #    ax_im.imshow(img)
         
-        plt.imshow(img, cmap='gray')
-        plt.show()
+        # plt.imshow(img, cmap='gray')
+        # plt.show()
         if saveHere is not None:
             cv2.imwrite(os.path.join(saveHere,'{}.png').format(linenum),img.numpy()*255)
             linenum+=1
