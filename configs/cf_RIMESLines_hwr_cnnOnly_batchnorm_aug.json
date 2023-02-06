@@ -8,7 +8,7 @@
     "data_loader": {
         "data_set_name": "AuthorRIMESLinesDataset",
 
-        "data_dir": "../data/RIMES/",
+        "data_dir": "./data/RIMES/",
         "batch_size": 16,
         "a_batch_size": 1,
         "shuffle": true,
@@ -16,7 +16,7 @@
 
         "augmentation": "warp",
         "img_height": 64,
-        "char_file": "../data/RIMES/characterset_lines.json",
+        "char_file": "./data/RIMES/characterset_lines.json",
         "center_pad": false
     },
     "validation": {
@@ -45,7 +45,7 @@
     "trainer": {
         "class": "HWWithStyleTrainer",
         "iterations": 425000,
-        "save_dir": "../saved/",
+        "save_dir": "./saved/",
         "val_step": 12500,
         "save_step": 25000,
         "save_step_minor": 250,

@@ -227,12 +227,12 @@ class HWWithStyleTrainer(BaseTrainer):
             instance = self.text_data.getInstance()
         else:
             try:
-                instance = self.data_loader_iter.next()
+                instance = next(self.data_loader_iter)
             except StopIteration:
                 if 'refresh_data' in dir(self.data_loader.dataset):
                     self.data_loader.dataset.refresh_data(None,None,self.logged)
                 self.data_loader_iter = iter(self.data_loader)
-                instance = self.data_loader_iter.next()
+                instance = next(self.data_loader_iter)
 
         self.optimizer.zero_grad()
         if self.curriculum:
@@ -461,7 +461,7 @@ class HWWithStyleTrainer(BaseTrainer):
                     losses = self.run_gen(instance,self.curriculum.getValid())
                     pred=None
                 else:
-                    pred, recon, losses = self.run_hwr(instance)
+                    pred, losses = self.run_hwr(instance)
             
                 for name in losses.keys():
                     losses[name] *= self.lossWeights[name[:-4]]

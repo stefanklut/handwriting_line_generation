@@ -103,10 +103,10 @@ class AutoTrainer(BaseTrainer):
             instance = self.text_data.getInstance()
         else:
             try:
-                instance = self.data_loader_iter.next()
+                instance = next(self.data_loader_iter)
             except StopIteration:
                 self.data_loader_iter = iter(self.data_loader)
-                instance = self.data_loader_iter.next()
+                instance = next(self.data_loader_iter)
         ##toc=timeit.default_timer()
         ##print('data: '+str(toc-tic))
         

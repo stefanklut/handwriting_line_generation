@@ -12,7 +12,7 @@ class Wikipedia:
             with open('DIR') as f:
                 cache_path = f.readline().strip()
         else:
-            cache_path = '../data/wiki_cache' #/Data6/davis/data_cache
+            cache_path = './data/wiki_cache' #/Data6/davis/data_cache
             ensure_dir(cache_path)
 
         #if 'myVar' in locals():

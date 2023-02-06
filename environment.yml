@@ -1,0 +1,21 @@
+name: hlg
+channels:
+  - default
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3
+  - pytorch 
+  - torchvision 
+  - torchaudio 
+  - cudatoolkit=11.7
+  - numpy
+  - opencv
+  - pillow
+  - matplotlib
+  - scipy
+  - scikit-image
+  - pip
+  - pip:
+    - editdistance

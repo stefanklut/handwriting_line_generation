@@ -1,13 +1,13 @@
 {
-    "name": "IAM_auto_2tight_newCTC",
+    "name": "PageXML_auto_2tight_newCTC",
     "cuda": true,
     "gpu": 0,
     "save_mode": "state_dict",
     "override": true,
     "super_computer": false,
     "data_loader": {
-        "data_set_name": "AuthorHWDataset",
-        "data_dir": "./data/IAM/",
+        "data_set_name": "AuthorPageXMLDataset",
+        "data_dir": "./data/ijsberg/",
         "batch_size": 28,
         "a_batch_size": 1,
         "shuffle": false,
