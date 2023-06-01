@@ -51,7 +51,7 @@ Figures for the paper were made using `generate.py`
 ## Generating images using generate.py
 
 
-Usage: `python generate.py -c path/to/snapshot.pth -d output_directory -g #[optional gpu flag] -s style_pickle_file[optional] -T[optional, use test set]
+Usage: `python generate.py -c path/to/snapshot.pth -d output_directory -g #[optional gpu flag] -s style_pickle_file[optional] -T[optional, use test set]`
 
 You can also use `-h`
 
