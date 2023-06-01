@@ -117,48 +117,9 @@ def collate(batch):
         toRet['changed_image']=changed_batch
     return toRet
 
-def check_path_accessible(path: Path):
-    """
-    Check if the provide path is accessible, raise error for different checks
-    Args:
-        path (Path): path to check
-    Raises:
-        ValueError: path is not a Path object
-        FileNotFoundError: folder/file does not exist at location
-        PermissionError: no read access for folder/file
-    """
-    if not isinstance(path, Path):
-        raise ValueError(f"provided object {path} is not Path, but {type(path)}")
-    if not path.exists():
-        raise FileNotFoundError(f"Missing path: {path}")
-    if not os.access(path=path, mode=os.R_OK):
-        raise PermissionError(f"No access to {path} for read operations")
-    
-    return True
-
-def image_path_to_xml_path(image_path: Path, check: bool=True) -> Path:
-    """
-    Return the corresponding xml path for a image
-
-    Args:
-        image_path (Path): image path
-
-    Raises:
-        FileNotFoundError: no xml for image path
-        PermissionError: xml file is not readable
-
-    Returns:
-        Path: xml path
-    """
-    xml_path = image_path.absolute().parent.joinpath("page", image_path.stem + '.xml')
-    
-    if check:
-        check_path_accessible(xml_path)
-
-    return xml_path
 
 
-class AuthorPageXMLLinesDataset(Dataset):
+class AuthorPngTxtDataset(Dataset):
     def __init__(self, dirPath, split, config):
         if 'split' in config:
             split = config['split']
@@ -180,35 +141,34 @@ class AuthorPageXMLLinesDataset(Dataset):
         skip_author = config['skip_author'] if 'skip_author' in config else None
         
         if only_author is not None:
+            #TODO Can be done
             raise NotImplementedError('only_author not implemented for PageXML. There currently arent authors')
         if skip_author is not None:
+            #TODO Can be done
             raise NotImplementedError('skip_author not implemented for PageXML. There currently arent authors')
         
         short = config['short'] if 'short' in config else False
         
         assert split in ["test", "train", "valid"]
         
-        if split == "test":
-            txt_file = Path(dirPath).joinpath("test_filelist.txt")
-        elif split == "train":
-            txt_file = Path(dirPath).joinpath("train_filelist.txt")
-        elif split == "valid":
-            txt_file = Path(dirPath).joinpath("val_filelist.txt")
-        else:
-            raise FileNotFoundError
-        
         self.authors = defaultdict(list)
         
-        with txt_file.open(mode="r") as f:
-            image_paths = [Path(line).absolute() for line in f.read().splitlines()]
-            
-        xml_paths = [image_path_to_xml_path(path) for path in image_paths]
-        
-        for path in xml_paths:
-            # print(path)
-            authors = parseXML(path)
-            for key, values in authors:
-                self.authors[key].extend(values)
+        for path in Path(dirPath).glob("*/"):
+            if not path.is_dir():
+                continue
+            font_path = path.with_name(path.name + "_font.txt")
+            if not font_path.is_file():
+                continue
+            with font_path.open(mode="r") as f:
+                font = f.readline()
+            for image_path in path.glob("*.png"):
+                txt_path = image_path.with_suffix(".txt")
+                if not txt_path.is_file():
+                    continue
+                
+                with txt_path.open(mode="r") as f:
+                    trans = f.readline()
+                self.authors[font].append((str(image_path), trans))
             
         self.lineIndex = []            
         self.max_char_len=0
@@ -217,7 +177,7 @@ class AuthorPageXMLLinesDataset(Dataset):
         
         
         for author,lines in self.authors.items():
-            self.max_char_len = max(self.max_char_len,max([len(l[2]) for l in lines]))
+            self.max_char_len = max(self.max_char_len,max([len(l[1]) for l in lines]))
             # if split=='train' and self.batch_size==2:
             #     combs=list(itertools.combinations(list(range(len(lines))),self.batch_size))
             #     #np.random.shuffle(combs)
@@ -253,7 +213,7 @@ class AuthorPageXMLLinesDataset(Dataset):
             ensure_dir(self.fg_masks_dir)
             for author,lines in self.lineIndex:
                 for line in lines:
-                    img_path, lb, gt = self.authors[author][line]
+                    img_path, gt = self.authors[author][line]
                     img_path = os.path.join(self.dirPath, img_path)
                     fg_path = os.path.join(self.fg_masks_dir,'{}_{}.png'.format(author,line))
                     if not os.path.exists(fg_path):
@@ -263,11 +223,6 @@ class AuthorPageXMLLinesDataset(Dataset):
                         if img is None:
                             print('Error, could not read image: {}'.format(img_path))
                             return None
-                        lb[0] = max(lb[0],0)
-                        lb[2] = max(lb[2],0)
-                        lb[1] = min(lb[1],img.shape[0])
-                        lb[3] = min(lb[3],img.shape[1])
-                        img = img[lb[0]:lb[1],lb[2]:lb[3]] #read as grayscale, crop line
                         # plt.imshow(img, cmap="gray")
                         # plt.show()
                         if img.shape[0] != self.img_height:
@@ -423,7 +378,7 @@ class AuthorPageXMLLinesDataset(Dataset):
             # What is the modulo for?
             # if line>=len(self.authors[author]):
             #     line = (line+37)%len(self.authors[author])
-            img_path, lb, gt = self.authors[author][line]
+            img_path, gt = self.authors[author][line]
             img_path = os.path.join(self.dirPath, img_path)
 
             if self.no_spaces:
@@ -438,11 +393,6 @@ class AuthorPageXMLLinesDataset(Dataset):
                 if img is None:
                     print('Error, could not read image: {}'.format(img_path))
                     return None
-                lb[0] = max(lb[0],0)
-                lb[2] = max(lb[2],0)
-                lb[1] = min(lb[1],img.shape[0])
-                lb[3] = min(lb[3],img.shape[1])
-                img = img[lb[0]:lb[1],lb[2]:lb[3]] #read as grayscale, crop line
                 
                 # plt.imshow(img, cmap="gray")
                 # plt.show()
@@ -470,7 +420,7 @@ class AuthorPageXMLLinesDataset(Dataset):
             if self.augmentation=='affine':
                 if img.shape[1]*strech > self.max_width:
                     strech = self.max_width/img.shape[1]
-            images.append( (line,gt,img,author) )
+            images.append((line,gt,img,author))
             #we split the processing here so that strech will be adjusted for longest image in author batch
 
 
@@ -541,6 +491,7 @@ class AuthorPageXMLLinesDataset(Dataset):
                 spaced_label = None if self.spaced_by_name is None else self.spaced_by_name[name]
                 if spaced_label is not None:
                     assert(spaced_label.shape[1]==1)
+                    
             toAppend= {
                 "image": img,
                 "gt": gt,
