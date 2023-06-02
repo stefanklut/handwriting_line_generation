@@ -150,7 +150,12 @@ class AuthorPngTxtDataset(Dataset):
         short = config['short'] if 'short' in config else False
         
         assert split in ["test", "train", "valid"]
+
         
+        char_set_path = config['char_file']
+        with open(char_set_path) as f:
+            char_set = json.load(f)
+        self.char_to_idx = char_set['char_to_idx']
         self.authors = defaultdict(list)
         
         for path in Path(dirPath).glob("*/"):
@@ -168,13 +173,16 @@ class AuthorPngTxtDataset(Dataset):
                 
                 with txt_path.open(mode="r") as f:
                     trans = f.readline()
+                
+                if any((letter not in self.char_to_idx.keys()) for letter in trans):
+                    continue
                 self.authors[font].append((str(image_path), trans))
             
-        self.lineIndex = []            
         self.max_char_len=0
-        
+                
         self.author_list = sorted(list(set(self.authors.keys())))
         
+        self.lineIndex = []
         
         for author,lines in self.authors.items():
             self.max_char_len = max(self.max_char_len,max([len(l[1]) for l in lines]))
@@ -243,11 +251,6 @@ class AuthorPngTxtDataset(Dataset):
                         binarized = cv2.dilate(binarized,ele)
                         cv2.imwrite(fg_path,binarized)
                         print('saved fg mask: {}'.format(fg_path))
-                        
-        char_set_path = config['char_file']
-        with open(char_set_path) as f:
-            char_set = json.load(f)
-        self.char_to_idx = char_set['char_to_idx']
         
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
