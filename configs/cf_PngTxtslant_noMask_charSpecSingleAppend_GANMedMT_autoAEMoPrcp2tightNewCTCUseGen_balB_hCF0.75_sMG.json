@@ -8,7 +8,7 @@
     "data_loader": {
         "data_set_name": "AuthorPngTxtDataset",
 
-        "data_dir": "./data/ijsberg/",
+        "data_dir": "./data/cut_images/",
         "batch_size": 2,
         "a_batch_size": 2,
         "shuffle": true,
