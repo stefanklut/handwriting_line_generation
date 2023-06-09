@@ -94,6 +94,11 @@ class PngTxtDataset(Dataset):
             txt_file = Path(dirPath).joinpath("val_filelist.txt")
         else:
             raise FileNotFoundError
+        
+        char_set_path = config['char_file']
+        with open(char_set_path) as f:
+            char_set = json.load(f)
+        self.char_to_idx = char_set['char_to_idx']
             
         self.authors = defaultdict(list)
         
@@ -112,15 +117,12 @@ class PngTxtDataset(Dataset):
                 
                 with txt_path.open(mode="r") as f:
                     trans = f.readline()
+                if any((letter not in self.char_to_idx.keys()) for letter in trans):
+                    continue
                 authorLines = len(self.authors[font])
-            
+                
                 self.lineIndex.append((font, authorLines))
                 self.authors[font].append((str(image_path), trans))
-
-        char_set_path = config['char_file']
-        with open(char_set_path) as f:
-            char_set = json.load(f)
-        self.char_to_idx = char_set['char_to_idx']
 
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
