@@ -163,7 +163,7 @@ class BaseTrainer:
             self.lr_schedule = torch.optim.lr_scheduler.LambdaLR(self.optimizer,lr_lambda)
         elif self.useLearningSchedule:
             print('Unrecognized learning schedule: {}'.format(self.useLearningSchedule))
-            exit()
+            exit(1)
         
         self.monitor = config['trainer']['monitor']
         self.monitor_mode = config['trainer']['monitor_mode']

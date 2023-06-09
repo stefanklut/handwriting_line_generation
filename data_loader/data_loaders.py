@@ -7,6 +7,7 @@ from datasets import author_rimeslines_dataset
 from datasets import author_pageXML_dataset
 from datasets import pageXML_dataset
 from datasets import author_png_txt_dataset
+from datasets import png_txt_dataset
 from base import BaseDataLoader
 
 
@@ -38,6 +39,8 @@ def getDataLoader(config,split):
             return withCollate(hw_dataset.HWDataset,hw_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         elif data_set_name=='PageXMLDataset':
             return withCollate(pageXML_dataset.PageXMLDataset,pageXML_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
+        elif data_set_name=='PngTxtDataset':
+            return withCollate(png_txt_dataset.PngTxtDataset,png_txt_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         elif data_set_name=='AuthorHWDataset':
             return withCollate(author_hw_dataset.AuthorHWDataset,author_hw_dataset.collate,batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         elif data_set_name=='AuthorRIMESLinesDataset':
@@ -48,7 +51,7 @@ def getDataLoader(config,split):
             return withCollate(author_png_txt_dataset.AuthorPngTxtDataset, author_png_txt_dataset.collate, batch_size,valid_batch_size,shuffle,shuffleValid,numDataWorkers,split,data_dir,config)
         else:
             print('Error, no dataloader has no set for {}'.format(data_set_name))
-            exit()
+            exit(1)
 
 
 
