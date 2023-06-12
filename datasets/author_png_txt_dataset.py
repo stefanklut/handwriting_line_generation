@@ -176,7 +176,7 @@ class AuthorPngTxtDataset(Dataset):
                 
                 if any((letter not in self.char_to_idx.keys()) for letter in trans):
                     continue
-                self.authors[font].append((str(image_path), trans))
+                self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
             
         self.max_char_len=0
                 

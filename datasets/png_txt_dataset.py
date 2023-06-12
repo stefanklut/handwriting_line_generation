@@ -122,7 +122,7 @@ class PngTxtDataset(Dataset):
                 authorLines = len(self.authors[font])
                 
                 self.lineIndex.append((font, authorLines))
-                self.authors[font].append((str(image_path), trans))
+                self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
 
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
