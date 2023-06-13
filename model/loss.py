@@ -26,6 +26,7 @@ def AdaptiveHingeLoss(input,target,threshold):
     diff[torch.abs(diff-mean)/std<threshold] = 0
     return diff.mean()
 def CTCLoss(input,target,input_len,target_len):
-    ret = F.ctc_loss(input,target,input_len,target_len)
-    return torch.where(torch.isinf(ret), torch.zeros_like(ret), ret)
+    # ret = F.ctc_loss(input,target,input_len,target_len)
+    # return torch.where(torch.isinf(ret), torch.zeros_like(ret), ret)
+    return F.ctc_loss(input,target,input_len,target_len,zero_infinity=True)
 
