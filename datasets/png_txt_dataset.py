@@ -87,11 +87,11 @@ class PngTxtDataset(Dataset):
         assert split in ["test", "train", "valid"]
         
         if split == "test":
-            txt_file = Path(dirPath).joinpath("test_filelist.txt")
+            raise NotImplementedError
         elif split == "train":
-            txt_file = Path(dirPath).joinpath("train_filelist.txt")
+            txt_file = Path(dirPath).joinpath("training_all_train.txt")
         elif split == "valid":
-            txt_file = Path(dirPath).joinpath("val_filelist.txt")
+            txt_file = Path(dirPath).joinpath("training_all_val.txt")
         else:
             raise FileNotFoundError
         
@@ -102,27 +102,29 @@ class PngTxtDataset(Dataset):
             
         self.authors = defaultdict(list)
         
-        for path in Path(dirPath).glob("*/"):
-            if not path.is_dir():
-                continue
-            font_path = path.with_name(path.name + "_font.txt")
+        with txt_file.open(mode='r') as f:
+            lines = f.readlines()
+            image_paths = [Path(line.split()[0]) for line in lines]
+        
+        for image_path in image_paths:
+            dir_path = image_path.parent
+            font_path = dir_path.with_name(dir_path.name + "_font.txt")
             if not font_path.is_file():
                 continue
             with font_path.open(mode="r") as f:
                 font = f.readline()
-            for image_path in path.glob("*.png"):
-                txt_path = image_path.with_suffix(".txt")
-                if not txt_path.is_file():
-                    continue
-                
-                with txt_path.open(mode="r") as f:
-                    trans = f.readline()
-                if any((letter not in self.char_to_idx.keys()) for letter in trans):
-                    continue
-                authorLines = len(self.authors[font])
-                
-                self.lineIndex.append((font, authorLines))
-                self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
+            txt_path = image_path.with_suffix(".txt")
+            if not txt_path.is_file():
+                continue
+            
+            with txt_path.open(mode="r") as f:
+                trans = f.readline()
+            if any((letter not in self.char_to_idx.keys()) for letter in trans):
+                continue
+            authorLines = len(self.authors[font])
+            
+            self.lineIndex.append((font, authorLines))
+            self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
 
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
