@@ -13,6 +13,8 @@ import math
 import itertools, pickle
 import random
 
+from tqdm import tqdm
+
 from pathlib import Path
 
 import sys
@@ -171,7 +173,7 @@ class AuthorPngTxtDataset(Dataset):
             lines = f.readlines()
             image_paths = [Path(line.split()[0]) for line in lines]
         
-        for image_path in image_paths:
+        for image_path in tqdm(image_paths):
             dir_path = image_path.parent
             font_path = dir_path.with_name(dir_path.name + "_font.txt")
             if not font_path.is_file():
@@ -188,7 +190,9 @@ class AuthorPngTxtDataset(Dataset):
             
             if any((letter not in self.char_to_idx.keys()) for letter in trans):
                 continue
-            self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
+            self.authors[font].append((str(image_path.relative_to(Path(self.dirPath).absolute())), trans))
+            
+        print("TOTAL LINES ADDED:", sum(len(items) for items in self.authors.values()))
             
         self.max_char_len=0
                 

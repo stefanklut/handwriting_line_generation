@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import math
 import sys
+from tqdm import tqdm
 
 from pathlib import Path
 
@@ -106,7 +107,7 @@ class PngTxtDataset(Dataset):
             lines = f.readlines()
             image_paths = [Path(line.split()[0]) for line in lines]
         
-        for image_path in image_paths:
+        for image_path in tqdm(image_paths, desc="Loading image paths + GT"):
             dir_path = image_path.parent
             font_path = dir_path.with_name(dir_path.name + "_font.txt")
             if not font_path.is_file():
@@ -124,7 +125,9 @@ class PngTxtDataset(Dataset):
             authorLines = len(self.authors[font])
             
             self.lineIndex.append((font, authorLines))
-            self.authors[font].append((str(image_path.relative_to(self.dirPath)), trans))
+            self.authors[font].append((str(image_path.relative_to(Path(self.dirPath).absolute())), trans))
+            
+        print("TOTAL LINES ADDED:", sum(len(items) for items in self.authors.values()))
 
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
