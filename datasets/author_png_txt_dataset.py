@@ -173,7 +173,7 @@ class AuthorPngTxtDataset(Dataset):
             lines = f.readlines()
             image_paths = [Path(line.split()[0]) for line in lines]
         
-        for image_path in tqdm(image_paths):
+        for image_path in tqdm(image_paths, desc="Loading image paths + GT"):
             dir_path = image_path.parent
             font_path = dir_path.with_name(dir_path.name + "_font.txt")
             if not font_path.is_file():
@@ -449,7 +449,7 @@ class AuthorPngTxtDataset(Dataset):
                 fg_mask = cv2.imread(fg_path,0)
                 fg_mask = fg_mask/255
                 if fg_mask.shape!=img[:,:].shape:
-                    print('Error, fg_mask ({}, {}) not the same size as image ({})'.format(fg_path,fg_mask.shape,img[:,:,0].shape))
+                    print('Error, fg_mask ({}, {}) not the same size as image ({})'.format(fg_path,fg_mask.shape,img[:,:].shape))
                     th,fg_mask = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                     fg_mask = 255-fg_mask
                     ele = cv2.getStructuringElement(  cv2.MORPH_ELLIPSE, (9,9) )
