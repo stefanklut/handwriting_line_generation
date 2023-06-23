@@ -260,6 +260,12 @@ class AuthorPngTxtDataset(Dataset):
                             if img.shape[0]<self.img_height:
                                 diff = self.img_height-img.shape[0]
                                 img = np.pad(img,((diff//2,diff//2+diff%2),(0,0)),'constant',constant_values=255)
+                        elif img.shape[1]> self.max_width:
+                            percent = self.max_width/img.shape[1]
+                            img = cv2.resize(img, (0,0), fx=percent, fy=percent, interpolation = cv2.INTER_CUBIC)
+                            if img.shape[0]<self.img_height:
+                                diff = self.img_height-img.shape[0]
+                                img = np.pad(img,((diff//2,diff//2+diff%2),(0,0)),'constant',constant_values=255)
 
                         th,binarized = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                         binarized = 255-binarized
@@ -459,7 +465,7 @@ class AuthorPngTxtDataset(Dataset):
                 fg_mask=None
 
                     
-            if type(self.augmentation) is str and 'normalization' in  self.augmentation and not readNorm:
+            if type(self.augmentation) is str and 'normalization' in self.augmentation and not readNorm:
                 img = normalize_line.deskew(img)
                 img = normalize_line.skeletonize(img)
                 if self.normalized_dir is not None:
