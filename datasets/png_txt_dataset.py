@@ -123,8 +123,8 @@ class PngTxtDataset(Dataset):
             if any((letter not in self.char_to_idx.keys()) for letter in trans):
                 continue
             authorLines = len(self.authors[font])
-            
             self.lineIndex.append((font, authorLines))
+            
             self.authors[font].append((str(image_path.relative_to(Path(self.dirPath).absolute())), trans))
             
         print("TOTAL LINES ADDED:", sum(len(items) for items in self.authors.values()))

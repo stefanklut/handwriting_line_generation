@@ -214,6 +214,7 @@ class AuthorPngTxtDataset(Dataset):
                 for n in range(self.batch_size):
                     ls.append(self.batch_size*i+n)
                 inst = (author,ls)
+                # print(inst)
                 self.lineIndex.append(inst)
                 if short and i>=short:
                     break
@@ -222,6 +223,8 @@ class AuthorPngTxtDataset(Dataset):
             leftover = len(lines)%self.batch_size
             fill = self.batch_size-leftover
             last=[]
+            if leftover == 0:
+                continue
             for i in range(fill):
                 last.append(i)
             for i in range(leftover):
@@ -272,7 +275,9 @@ class AuthorPngTxtDataset(Dataset):
                         ele = cv2.getStructuringElement(  cv2.MORPH_ELLIPSE, (9,9) )
                         binarized = cv2.dilate(binarized,ele)
                         cv2.imwrite(fg_path,binarized)
-                        print('saved fg mask: {}'.format(fg_path))
+                        # print('saved fg mask: {}'.format(fg_path))
+                    # else:
+                    #     print(f"DUPLICATE FOUND IN FG_MASKS {fg_path}, {img_path}")
         
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
@@ -283,7 +288,6 @@ class AuthorPngTxtDataset(Dataset):
 
         self.remove_bg = config['remove_bg'] if 'remove_bg' in config else False
         self.include_stroke_aug = config['include_stroke_aug'] if 'include_stroke_aug' in config else False
-        
         
         #DEBUG
         if 'overfit' in config and config['overfit']:
