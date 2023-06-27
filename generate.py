@@ -3,6 +3,7 @@ import json
 import logging
 import argparse
 import torch
+from data_loader.data_loaders import getDataLoader
 from model import *
 from model.metric import *
 from model.loss import *
@@ -246,7 +247,7 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
     def get_authors():
         global authors
         if authors is None:
-            authors = get_valid_data_loader().dataset.authors
+            authors = list(get_valid_data_loader().dataset.authors.keys())
         return authors
 
     num_char = config['model']['num_class']
@@ -446,10 +447,10 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
                 segment=m[0]
                 idx+=len(segment)
                 if segment[0]=='[':
-                    nums=[int(s) for s in segment[1:-1].split(',')]
-                    style=styles[nums[0]]
+                    nums=[s for s in segment[1:-1].split(',')]
+                    style=styles[nums[0]][0]
                     for num in nums[1:]:
-                        subStyle+=styles[num]
+                        style+=styles[num][0]
                     style /= len(nums)
                 else:
                     #if normal:
@@ -465,17 +466,17 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
                     segment=m[0]
                     idx+=len(segment)
                     if segment[0]=='[':
-                        nums=[int(s) for s in segment[1:-1].split(',')]
-                        subStyle=styles[nums[0]]
+                        nums=[s for s in segment[1:-1].split(',')]
+                        subStyle=styles[nums[0]][0]
                         for num in nums[1:]:
-                            subStyle+=styles[num]
+                            subStyle+=styles[num][0]
                         subStyle /= len(nums)
                     else:
-                        subStyle=styles[int(segment)]
+                        subStyle=styles[segment][0]
                     if operation=='+':
                         style+=subStyle
                     elif operation=='-':
-                        style+=subStyleS
+                        style-=subStyle
 
                 #if normal:
                 if type(style) is list:
@@ -509,7 +510,7 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
                 else:
                     max_hits=5
                 styles=[]
-                for i,instance1 in enumerate(get_valid_data_loader):
+                for i,instance1 in enumerate(get_valid_data_loader()):
                     if instance1['author'][0]==author:
                         print('{} found on instance {}'.format(author,i))
                         label1 = instance1['label'].to(gpu)
@@ -554,6 +555,9 @@ def main(resume,saveDir,gpu=None,config=None,addToConfig=None, fromDataset=True,
                 for i in range(num_inst):
                     if not model.vae:
                         authorA = random.choice(get_authors())
+                        print(authorA)
+                        print(styles.keys())
+                        print(styles[authorA])
                         instance = random.randint(0,len(styles[authorA])-1)
                         style1 = styles[authorA][instance]
                         if interpolateS:
