@@ -449,17 +449,17 @@ class AuthorPngTxtDataset(Dataset):
             if self.augmentation=='affine':
                 if img.shape[1]*strech > self.max_width:
                     strech = self.max_width/img.shape[1]
-            images.append((line,gt,img,author))
+            images.append((line,gt,img,img_path,author))
             #we split the processing here so that strech will be adjusted for longest image in author batch
 
 
-        for line,gt,img,author in images:
+        for line,gt,img,img_path,author in images:
             if self.fg_masks_dir is not None:
                 fg_path = os.path.join(self.fg_masks_dir,'{}_{}.png'.format(author,line))
                 fg_mask = cv2.imread(fg_path,0)
                 fg_mask = fg_mask/255
                 if fg_mask.shape!=img[:,:].shape:
-                    print('Error, fg_mask ({}, {}) not the same size as image ({})'.format(fg_path,fg_mask.shape,img[:,:].shape))
+                    print('Error, fg_mask ({}, {}) not the same size as image ({}, {})'.format(fg_path,fg_mask.shape,img_path,img[:,:].shape))
                     th,fg_mask = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                     fg_mask = 255-fg_mask
                     ele = cv2.getStructuringElement(  cv2.MORPH_ELLIPSE, (9,9) )
