@@ -236,7 +236,7 @@ class AuthorPngTxtDataset(Dataset):
         if self.fg_masks_dir is not None:
             if self.fg_masks_dir[-1]=='/':
                 self.fg_masks_dir = self.fg_masks_dir[:-1]
-            self.fg_masks_dir+='_{}'.format(self.max_width)
+            self.fg_masks_dir+='_{}/{}'.format(self.max_width, split)
             ensure_dir(self.fg_masks_dir)
             for author,lines in self.lineIndex:
                 for line in lines:
@@ -275,9 +275,10 @@ class AuthorPngTxtDataset(Dataset):
                         ele = cv2.getStructuringElement(  cv2.MORPH_ELLIPSE, (9,9) )
                         binarized = cv2.dilate(binarized,ele)
                         cv2.imwrite(fg_path,binarized)
-                        # print('saved fg mask: {}'.format(fg_path))
+                        print('saved fg mask for {}: {}'.format(img_path, fg_path))
                     # else:
                     #     print(f"DUPLICATE FOUND IN FG_MASKS {fg_path}, {img_path}")
+        # sys.exit()
         
         self.augmentation = config['augmentation'] if 'augmentation' in config else None
         self.normalized_dir = config['cache_normalized'] if 'cache_normalized' in config else None
@@ -459,7 +460,12 @@ class AuthorPngTxtDataset(Dataset):
                 fg_mask = cv2.imread(fg_path,0)
                 fg_mask = fg_mask/255
                 if fg_mask.shape!=img[:,:].shape:
+                    print("idx:", idx)
+                    print("line:", line)
+                    print("gt:", gt) 
+                    print("author:", author)
                     print('Error, fg_mask ({}, {}) not the same size as image ({}, {})'.format(fg_path,fg_mask.shape,img_path,img[:,:].shape))
+                    sys.exit()
                     th,fg_mask = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
                     fg_mask = 255-fg_mask
                     ele = cv2.getStructuringElement(  cv2.MORPH_ELLIPSE, (9,9) )
